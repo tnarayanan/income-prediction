@@ -1,4 +1,8 @@
-data/
+imagery/
+test_imagery/
+16zpallnoagi.csv
+worldelev.npy
+ziplatlon.csv
 
 .DS_STORE
 *~
