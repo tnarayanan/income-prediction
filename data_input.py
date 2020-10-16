@@ -20,9 +20,11 @@ class DataInput(object):
         self.Y = None
 
     def load_data(self):
+        print("loading data...")
+
         zip_codes = self.get_zip_codes()
-        print(zip_codes.head())
-        print(zip_codes.columns)
+        # print(zip_codes.head())
+        # print(zip_codes.columns)
 
         xy_to_zip = {}
 
@@ -47,9 +49,6 @@ class DataInput(object):
             img_id = filename[:-4]
             x, y = util.get_coordinates(img_id)
 
-            img = util.jpg_to_nparray(self.image_dir + filename)
-            curr_entry.append(img)
-
             if (x, y) not in xy_to_zip:
                 lat, lon = webmercator.latlon(x, y, 14)
 
@@ -63,9 +62,11 @@ class DataInput(object):
                             closest_zip = row['zip']
 
                     xy_to_zip[(x, y)] = closest_zip
-                    # zip_to_num_assigned[closest_zip] += 1
 
             if (x, y) in xy_to_zip:
+                img = util.jpg_to_nparray(self.image_dir + filename)
+                curr_entry.append(img)
+
                 avg_income = zip_to_avg_income[xy_to_zip[(x, y)]]
                 curr_entry.append(avg_income)
                 data.append(curr_entry)
@@ -83,8 +84,10 @@ class DataInput(object):
         self.x = data_frame['image']
         self.Y = data_frame['avg_income']
 
-        print(self.x.head())
-        print(self.Y.head())
+        print("loaded data")
+
+        # print(self.x.head())
+        # print(self.Y.head())
 
     def view_image(self, img_id):
         filename = self.image_dir + img_id + ".jpg"
@@ -102,4 +105,14 @@ class DataInput(object):
         income_by_zip.rename(columns={'ZIPCODE': 'zip', 'N1': 'num_returns', 'A02650': 'total_income'}, inplace=True)
         # merge on zip
         zips = zip_locations.merge(income_by_zip, on='zip', how='left')
+        # print("before restricting: len=", len(zips))
+
+        # restrict the zip codes to the right area
+        zips = zips[round(webmercator.x(zips['lon'], 14)) >= 2794]
+        zips = zips[round(webmercator.x(zips['lon'], 14)) <= 2839]
+        zips = zips[round(webmercator.y(zips['lat'], 14)) >= 6528]
+        zips = zips[round(webmercator.y(zips['lat'], 14)) <= 6572]
+        zips = zips[zips['num_returns'] >= 0]
+        zips = zips[zips['total_income'] >= 0]
+        # print("after restricting: len=", len(zips))
         return zips
