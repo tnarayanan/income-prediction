@@ -79,11 +79,12 @@ class DataInput(object):
                                      30, int(percent)))
             sys.stdout.flush()
 
-        data_frame = pd.DataFrame(np.array(data), columns=['image', 'avg_income'])
+        data_frame = pd.DataFrame(data, columns=['image', 'avg_income'])
 
         self.x = data_frame['image']
         self.Y = data_frame['avg_income']
 
+        print()
         print("loaded data")
 
         # print(self.x.head())
@@ -98,11 +99,11 @@ class DataInput(object):
         # load data
         tax_returns = pd.read_csv('data/16zpallnoagi.csv')
         zips = pd.read_csv('data/ziplatlon.csv', sep=';')
-        zip_locations = zips[['zip', 'latitude', 'longitude']]
-        zip_locations.rename(columns={'latitude': 'lat', 'longitude': 'lon'}, inplace=True)
+        zips.rename(columns={'latitude': 'lat', 'longitude': 'lon'}, inplace=True)
+        zip_locations = zips[['zip', 'lat', 'lon']]
         # extract zip code income
-        income_by_zip = tax_returns[['ZIPCODE', 'N1', 'A02650']]
-        income_by_zip.rename(columns={'ZIPCODE': 'zip', 'N1': 'num_returns', 'A02650': 'total_income'}, inplace=True)
+        tax_returns.rename(columns={'ZIPCODE': 'zip', 'N1': 'num_returns', 'A02650': 'total_income'}, inplace=True)
+        income_by_zip = tax_returns[['zip', 'num_returns', 'total_income']]
         # merge on zip
         zips = zip_locations.merge(income_by_zip, on='zip', how='left')
         # print("before restricting: len=", len(zips))
