@@ -26,6 +26,7 @@ Next, ensure the most recent versions of the following libraries are installed:
 numpy==1.19.2
 torch==1.6.0
 Pillow==8.0.0
+pandas==1.1.3
 ```
 
 To set up a virtual environment for this project:
@@ -34,7 +35,7 @@ To set up a virtual environment for this project:
 2. `python3 -m venv venv/`. This will create a virtual environment folder.
 3. `source venv/bin/activate`. This will activate the virtual environment.
 `(venv)` should appear at the beginning of the terminal prompt.
-4. `pip install numpy torch pillow`. This will install the most recent versions
+4. `pip install numpy torch pillow pandas`. This will install the most recent versions
 of Numpy, PyTorch, and Pillow (Python Image Library).
 
 After following these steps the first time, the only required step is to
