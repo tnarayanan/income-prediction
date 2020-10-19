@@ -4,17 +4,31 @@ from conv_net import ConvNet
 from tqdm import tqdm, trange
 import torch
 import matplotlib.pyplot as plt
+import sys
+
+def load_data(load=True):
+    if load:
+        return torch.load('./data/train_dataset.pt'), torch.load('./data/test_dataset.pt')
+
+    train_data = DataInput()
+    test_data = DataInput(test_data=True)
+
+    train_data.load_data()
+    test_data.load_data()
+
+    train_dataset = torch.utils.data.TensorDataset(train_data.x, train_data.Y)
+    test_dataset = torch.utils.data.TensorDataset(test_data.x, test_data.Y)
+
+    torch.save(train_dataset, 'data/train_dataset.pt')
+    torch.save(test_dataset, 'data/test_dataset.pt')
+
+    return train_dataset, test_dataset
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-train_data = DataInput()
-test_data = DataInput(test_data=True)
+args = sys.argv[1:]
 
-train_data.load_data()
-test_data.load_data()
-
-train_dataset = torch.utils.data.TensorDataset(train_data.x, train_data.Y)
-test_dataset = torch.utils.data.TensorDataset(test_data.x, test_data.Y)
+train_dataset, test_dataset = load_data(True) if not args or args[0] == '--load' else load_data(False)
 
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False)
@@ -27,7 +41,7 @@ criterion = torch.nn.L1Loss()
 optimizer = torch.optim.Adam(conv_net.parameters(), lr=0.001)
 
 loss_train = []
-num_epochs = 10
+num_epochs = 2
 
 print("Training model...")
 total = num_epochs*len(train_dataset)
