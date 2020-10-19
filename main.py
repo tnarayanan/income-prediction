@@ -19,10 +19,6 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 # split into mini-batches of 64
-# train_batch_x = torch.split(train_data.x, 64)
-# train_batch_Y = torch.split(train_data.Y, 64)
-
-# train_ba
 
 conv_net = ConvNet().to(device=device)
 
