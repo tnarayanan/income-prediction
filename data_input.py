@@ -5,7 +5,7 @@ import numpy as np
 import util
 import webmercator
 import os
-import sys
+from tqdm import tqdm
 
 
 class DataInput(object):
@@ -43,58 +43,64 @@ class DataInput(object):
             # is a part of. Here, we just precompute the average incomes for each zip code
             zip_to_avg_income[row['zip']] = row['total_income'] / row['num_returns']
 
-        data = []
+        x_data = []
+        y_data = []
         # get the list of file names in the specified directory
         files = os.listdir(self.image_dir)
         i = 0
-        for filename in files:
-            # increment counter for progress bar
-            i += 1
-            curr_entry = []
+        with tqdm(total=len(files)) as pbar:
+            for filename in files:
+                # increment counter for progress bar
+                i += 1
+                curr_entry = []
 
-            # remove .jpg from end
-            img_id = filename[:-4]
-            x, y = util.get_coordinates(img_id)
+                # remove .jpg from end
+                img_id = filename[:-4]
+                x, y = util.get_coordinates(img_id)
 
-            if (x, y) not in tile_to_zip:
-                # this code is skipped for the tiles that have already been assigned a zip code
-                # (because they contain the center of a zip code)
-                lat, lon = webmercator.latlon(x, y, 14)
+                if (x, y) not in tile_to_zip:
+                    # this code is skipped for the tiles that have already been assigned a zip code
+                    # (because they contain the center of a zip code)
+                    lat, lon = webmercator.latlon(x, y, 14)
 
-                if util.get_elevation(lat, lon) > 0:
-                    # not an ocean tile
-                    closest_zip = 0
-                    min_dist = 987654321  # large number
-                    for index, row in zip_codes.iterrows():
-                        squared_dist = (lat - row['lat']) ** 2 + (lon - row['lon']) ** 2
-                        if squared_dist < min_dist:
-                            min_dist = squared_dist
-                            closest_zip = row['zip']
+                    if util.get_elevation(lat, lon) > 0:
+                        # not an ocean tile
+                        closest_zip = 0
+                        min_dist = 987654321  # large number
+                        for index, row in zip_codes.iterrows():
+                            squared_dist = (lat - row['lat']) ** 2 + (lon - row['lon']) ** 2
+                            if squared_dist < min_dist:
+                                min_dist = squared_dist
+                                closest_zip = row['zip']
 
-                    tile_to_zip[(x, y)] = closest_zip
+                        tile_to_zip[(x, y)] = closest_zip
 
-            if (x, y) in tile_to_zip:
-                img = util.jpg_to_nparray(self.image_dir + filename)
-                curr_entry.append(img)
+                if (x, y) in tile_to_zip:
+                    img = util.jpg_to_nparray(self.image_dir + filename)
+                    img = img.astype('float32')
+                    x_data.append(img)
 
-                avg_income = zip_to_avg_income[tile_to_zip[(x, y)]]
-                curr_entry.append(avg_income)
+                    avg_income = zip_to_avg_income[tile_to_zip[(x, y)]]
+                    y_data.append(avg_income)
 
-                data.append(curr_entry)
+                    # data.append(curr_entry)
 
-            # update progress bar
-            percent = 100 * i / len(files)
-            sys.stdout.write('\r')
-            sys.stdout.write("Completed: [{:{}}] {:>3}%"
-                             .format('=' * int(percent / (100.0 / 30)),
-                                     30, int(percent)))
-            sys.stdout.flush()
+                # update progress bar
+                pbar.update(1)
 
         # encapsulate data into a DataFrame
-        data_frame = pd.DataFrame(data, columns=['image', 'avg_income'])
+        # data_frame = pd.DataFrame(data, columns=['image', 'avg_income'])
 
-        self.x = data_frame['image']
-        self.Y = data_frame['avg_income']
+        # self.x = data_frame['image']
+        # self.Y = data_frame['avg_income']
+
+        self.x = np.array(x_data)
+        self.x = self.x.reshape(len(self.x), 3, 256, 256)
+        self.x = torch.from_numpy(self.x)
+
+        self.Y = np.array(y_data)
+        self.Y = self.Y.astype('int64')
+        self.Y = torch.from_numpy(self.Y)
 
         print()
         print("loaded data")
