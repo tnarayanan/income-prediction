@@ -6,7 +6,18 @@ Built for the Stanford ACMLab Fall 2020 project
 by Clare Chua, Ryan Chi, Tejas Narayanan, Nathan Kim, and Zander Lack
 (Team CRouToNZ).
 
-## Setup
+## Generate predictions
+
+A `predict(filepath)` function has been provided in `predict.py`. An example of how to use
+this function is in `how_to_predict.py`, and has also been copied here:
+
+```python
+import predict
+
+print(predict.predict('data/imagery/14_2801_6536.jpg'))
+```
+
+## Development setup
 
 ### Data
 Add the following files/folders to the `data` folder:

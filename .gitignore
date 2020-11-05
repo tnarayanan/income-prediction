@@ -3,6 +3,8 @@ test_imagery/
 16zpallnoagi.csv
 worldelev.npy
 ziplatlon.csv
+data_X.pt
+data_y.pt
 
 .DS_STORE
 *~
